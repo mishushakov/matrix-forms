@@ -5,8 +5,6 @@ const sdk = require('matrix-js-sdk')
 const app = express()
 const fs = require('fs')
 
-const port = 3000
-
 const client = sdk.createClient({
   baseUrl: process.env.HOMESERVER,
   accessToken: process.env.ACCESS_TOKEN,
@@ -23,8 +21,8 @@ app.post('/', (req, res) => {
     if (error) return res.status(400).send(error)
 
     const message = {
-      body: `New form submission ${req.hostname}\n`,
-      formatted_body: '<h4>New form submission</h4>',
+      body: `New submission ${req.hostname}\n`,
+      formatted_body: '<h4>New submission</h4>',
       format: 'org.matrix.custom.html',
       msgtype: 'm.text'
     }
@@ -58,5 +56,5 @@ app.post('/', (req, res) => {
 })
 
 app.listen(process.env.PORT, () => {
-  console.log(`Listening at http://localhost:${port}`)
+  console.log(`Listening at http://localhost:${process.env.PORT}`)
 })
