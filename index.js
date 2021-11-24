@@ -10,18 +10,16 @@ const client = sdk.createClient({
   accessToken: process.env.ACCESS_TOKEN,
 })
 
-const capitalize = (str) => {
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
+const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1)
 
 app.post('/', (req, res) => {
   const roomId = req.params.form || process.env.DEFAULT_ROOM
   const form = formidable({})
-  form.parse(req, (error, fields, files) => {
+  form.parse(req, async (error, fields, files) => {
     if (error) return res.status(400).send(error)
 
     const message = {
-      body: `New submission ${req.hostname}\n`,
+      body: `New submission\n`,
       formatted_body: '<h4>New submission</h4>',
       format: 'org.matrix.custom.html',
       msgtype: 'm.text'
@@ -32,26 +30,28 @@ app.post('/', (req, res) => {
       message.formatted_body += `${capitalize(field)}: <b>${fields[field]}</b><br />`
     })
 
-    client.sendEvent(roomId, 'm.room.message', message)
-    .then(console.log)
-    .catch(error => res.status(400).send(error.message))
+    try {
+      await client.sendEvent(roomId, 'm.room.message', message)
+    } catch (e) {
+      return res.status(e.httpStatus).send(e.data.error)
+    }
 
-    Object.values(files).forEach((file) => {
-      client.uploadContent(fs.createReadStream(file.filepath))
-      .then((url) => {
+    Object.values(files).forEach(async (file) => {
+      try {
+        const url = await client.uploadContent(fs.createReadStream(file.filepath))
         const content = {
           msgtype: 'm.file',
           body: file.originalFilename,
           url: JSON.parse(url).content_uri
         }
 
-        client.sendMessage(roomId, content)
-        .catch(error => res.status(500).send(error.message))
-      })
-      .catch(error => res.status(500).send(error.message))
+        await client.sendMessage(roomId, content)
+      } catch (e) {
+        return res.status(e.httpStatus).send(e.data.error)
+      }
     })
 
-    res.sendStatus(200)
+    await res.sendStatus(200)
   })
 })
 
