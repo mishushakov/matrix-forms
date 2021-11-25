@@ -108,7 +108,7 @@ npm start
 
 `templates/success.handlebars` - Success template
 
-### Access forms with bots
+## Access forms with bots
 
 The messages should contain `matrix.forms` field to help you parse submission contents with bots
 
@@ -125,5 +125,5 @@ The messages should contain `matrix.forms` field to help you parse submission co
       "size": 12527
     }
   ]
-},
+}
 ```

@@ -67,6 +67,7 @@ app.post('/', async (req, res) => {
 
   if (Boolean(req.query.redirect)) return res.redirect(req.query.return)
   await res.render('success', {layout: false, data: {
+    room: roomId,
     fields: req.fields,
     files,
     return: req.query.return
