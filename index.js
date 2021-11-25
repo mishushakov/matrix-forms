@@ -1,9 +1,11 @@
 require('dotenv').config()
 const express = require('express')
-const formidable = require('formidable')
+const formidableMiddleware = require('express-formidable-v2')
 const sdk = require('matrix-js-sdk')
-const app = express()
 const fs = require('fs')
+
+const app = express()
+app.use(formidableMiddleware())
 
 const client = sdk.createClient({
   baseUrl: process.env.HOMESERVER,
@@ -12,47 +14,44 @@ const client = sdk.createClient({
 
 const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1)
 
-app.post('/', (req, res) => {
-  const roomId = req.params.form || process.env.DEFAULT_ROOM
-  const form = formidable({})
-  form.parse(req, async (error, fields, files) => {
-    if (error) return res.status(400).send(error)
+app.post('/', async (req, res) => {
+  const roomId = req.query.to || process.env.DEFAULT_ROOM
+  if (!req.fields || !req.files) return res.sendStatus(400)
 
-    const message = {
-      body: `New submission\n`,
-      formatted_body: '<h4>New submission</h4>',
-      format: 'org.matrix.custom.html',
-      msgtype: 'm.text'
-    }
+  const message = {
+    body: `New submission\n`,
+    formatted_body: '<h4>New submission</h4>',
+    format: 'org.matrix.custom.html',
+    msgtype: 'm.text'
+  }
 
-    Object.keys(fields).forEach((field) => {
-      message.body += `${capitalize(field)}: ${fields[field]}\n`
-      message.formatted_body += `${capitalize(field)}: <b>${fields[field]}</b><br />`
-    })
+  Object.keys(req.fields).forEach((field) => {
+    message.body += `${capitalize(field)}: ${req.fields[field]}\n`
+    message.formatted_body += `${capitalize(field)}: <b>${req.fields[field]}</b><br />`
+  })
 
+  try {
+    await client.sendEvent(roomId, 'm.room.message', message)
+  } catch (e) {
+    return res.status(e.httpStatus).send(e.data.error)
+  }
+
+  Object.values(req.files).forEach(async (file) => {
     try {
-      await client.sendEvent(roomId, 'm.room.message', message)
+      const url = await client.uploadContent(fs.createReadStream(file.path))
+      const content = {
+        msgtype: 'm.file',
+        body: file.name,
+        url: JSON.parse(url).content_uri
+      }
+      await client.sendMessage(roomId, content)
     } catch (e) {
       return res.status(e.httpStatus).send(e.data.error)
     }
-
-    Object.values(files).forEach(async (file) => {
-      try {
-        const url = await client.uploadContent(fs.createReadStream(file.filepath))
-        const content = {
-          msgtype: 'm.file',
-          body: file.originalFilename,
-          url: JSON.parse(url).content_uri
-        }
-
-        await client.sendMessage(roomId, content)
-      } catch (e) {
-        return res.status(e.httpStatus).send(e.data.error)
-      }
-    })
-
-    await res.sendStatus(200)
   })
+
+  if (req.query.redirect) return res.redirect(req.query.redirect)
+  await res.sendStatus(200)
 })
 
 app.listen(process.env.PORT, () => {
