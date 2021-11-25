@@ -29,6 +29,8 @@ Connect your forms to [Matrix](https://matrix.org)
 
 ![Screenshot](https://i.imgur.com/fSZuwNr.png)
 
+[Demo](https://mishushakov.github.io/matrix-forms)
+
 ## Features
 
 - Server-side, no additional JavaScript
