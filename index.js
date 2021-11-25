@@ -28,40 +28,47 @@ app.post('/', async (req, res) => {
   const roomId = req.query.to || process.env.DEFAULT_ROOM
   if (!req.fields || !req.files) return res.sendStatus(400)
 
+  const files = Object.values(req.files)
+  const upload_queue = []
+  files.forEach((file) => upload_queue.push(client.uploadContent(fs.createReadStream(file.path))))
+
+  const upload_result = await Promise.all(upload_queue)
+  upload_result.forEach((content_uri, index) => files[index].content_uri = JSON.parse(content_uri).content_uri)
+
   const message = {
     body: Object.keys(req.fields).map((field) => `${capitalize(field)}: ${req.fields[field]}\n`).join(""),
     formatted_body: await hbs.render('./templates/message.handlebars', {fields: req.fields}),
     format: 'org.matrix.custom.html',
     msgtype: 'm.text',
     'matrix.forms': {
-      fields: req.fields
+      fields: req.fields,
+      files: files.map(file => {
+        return {
+          name: file.name,
+          size: file.size,
+          content_uri: file.content_uri
+        }
+      })
     }
   }
 
   try {
-    await client.sendEvent(roomId, 'm.room.message', message)
+    await client.sendMessage(roomId, message)
+    files.forEach((file) => {
+      client.sendMessage(roomId, {
+        msgtype: 'm.file',
+        body: file.name,
+        url: file.content_uri
+      })
+    })
   } catch (e) {
     return res.status(e.httpStatus).send(e.data.error)
   }
 
-  Object.values(req.files).forEach(async (file) => {
-    try {
-      const url = await client.uploadContent(fs.createReadStream(file.path))
-      const content = {
-        msgtype: 'm.file',
-        body: file.name,
-        url: JSON.parse(url).content_uri
-      }
-      await client.sendMessage(roomId, content)
-    } catch (e) {
-      return res.status(e.httpStatus).send(e.data.error)
-    }
-  })
-
   if (Boolean(req.query.redirect)) return res.redirect(req.query.return)
   await res.render('success', {layout: false, data: {
     fields: req.fields,
-    files: Object.values(req.files),
+    files,
     return: req.query.return
   }})
 })

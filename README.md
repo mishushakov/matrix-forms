@@ -115,8 +115,15 @@ The messages should contain `matrix.forms` field to help you parse submission co
 ```json
 "matrix.forms": {
   "fields": {
-    "link": "github.com/mishushakov",
-    "name": "Mish"
-  }
-}
+    "link": "gfd",
+    "name": "gfd"
+  },
+  "files": [
+    {
+      "content_uri": "mxc://matrix.org/gMFeqNWiVdMnBfmxTyxDgeMP",
+      "name": "recording-3.ogg",
+      "size": 12527
+    }
+  ]
+},
 ```
