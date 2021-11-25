@@ -37,10 +37,11 @@ Connect your forms to [Matrix](https://matrix.org)
 - File uploads
 - Templates
 - CORS
+- Access with bots
 
-Consider suppporting me if you want to see new features
+Consider sponsoring me if you want to see new features
 
-## Prerequisite
+## Prerequisites
 
 1. Create new account
 2. In Element, go to "All settings" > "Help & About" and copy the "Access Token" from the "Advanced" section
@@ -97,10 +98,25 @@ npm start
 
 `to` - Matrix room to submit the form
 
-`return` - Return URL (for the template)
+`return` - Return URL (rendered in template)
 
-`redirect` - Redirect address (on success)
+`redirect` - Redirect to `return` URL (Boolean)
 
 ### Templates
 
+`templates/message.handlebars` - Message template
+
 `templates/success.handlebars` - Success template
+
+### Access forms with bots
+
+The messages should contain `matrix.forms` field to help you parse submission contents with bots
+
+```json
+"matrix.forms": {
+  "fields": {
+    "link": "github.com/mishushakov",
+    "name": "Mish"
+  }
+}
+```

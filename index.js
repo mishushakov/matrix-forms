@@ -29,16 +29,14 @@ app.post('/', async (req, res) => {
   if (!req.fields || !req.files) return res.sendStatus(400)
 
   const message = {
-    body: `New submission\n`,
-    formatted_body: '<h4>New submission</h4>',
+    body: Object.keys(req.fields).map((field) => `${capitalize(field)}: ${req.fields[field]}\n`).join(""),
+    formatted_body: await hbs.render('./templates/message.handlebars', {fields: req.fields}),
     format: 'org.matrix.custom.html',
-    msgtype: 'm.text'
+    msgtype: 'm.text',
+    'matrix.forms': {
+      fields: req.fields
+    }
   }
-
-  Object.keys(req.fields).forEach((field) => {
-    message.body += `${capitalize(field)}: ${req.fields[field]}\n`
-    message.formatted_body += `${capitalize(field)}: <b>${req.fields[field]}</b><br />`
-  })
 
   try {
     await client.sendEvent(roomId, 'm.room.message', message)
@@ -60,7 +58,7 @@ app.post('/', async (req, res) => {
     }
   })
 
-  if (req.query.redirect) return res.redirect(req.query.redirect)
+  if (Boolean(req.query.redirect)) return res.redirect(req.query.return)
   await res.render('success', {layout: false, data: {
     fields: req.fields,
     files: Object.values(req.files),
