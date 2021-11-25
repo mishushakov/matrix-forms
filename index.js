@@ -1,18 +1,28 @@
 require('dotenv').config()
 const express = require('express')
 const formidableMiddleware = require('express-formidable-v2')
+const { create } = require('express-handlebars')
+const cors = require('cors')
 const sdk = require('matrix-js-sdk')
 const fs = require('fs')
 
 const app = express()
 app.use(formidableMiddleware())
+app.use(cors({origin: process.env.CORS || '*'}))
+
+const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1)
+const hbs = create({
+  helpers: {capitalize}
+})
+
+app.engine('handlebars', hbs.engine)
+app.set('view engine', 'handlebars')
+app.set('views', './templates')
 
 const client = sdk.createClient({
   baseUrl: process.env.HOMESERVER,
   accessToken: process.env.ACCESS_TOKEN,
 })
-
-const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1)
 
 app.post('/', async (req, res) => {
   const roomId = req.query.to || process.env.DEFAULT_ROOM
@@ -51,7 +61,11 @@ app.post('/', async (req, res) => {
   })
 
   if (req.query.redirect) return res.redirect(req.query.redirect)
-  await res.sendStatus(200)
+  await res.render('success', {layout: false, data: {
+    fields: req.fields,
+    files: Object.values(req.files),
+    return: req.query.return
+  }})
 })
 
 app.listen(process.env.PORT, () => {

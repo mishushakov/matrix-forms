@@ -10,7 +10,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.17.1",
+    "express-formidable-v2": "^2.2.1",
+    "express-handlebars": "^6.0.1",
     "formidable": "^2.0.1",
     "matrix-js-sdk": "^15.1.1"
   },

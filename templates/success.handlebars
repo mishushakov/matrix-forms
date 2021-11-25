@@ -1,0 +1,44 @@
+<h1>Submission was successful</h1>
+
+<h2>Fields</h2>
+
+<table>
+  <tr>
+    {{#each @fields}}
+      <th>{{capitalize @key}}</th>
+    {{/each}}
+  </tr>
+  <tr>
+    {{#each @fields}}
+      <td>{{this}}</td>
+    {{/each}}
+  </tr>
+</table>
+
+<h2>Files</h2>
+
+<table>
+  {{#each @files}}
+    <tr>
+      <th>File</th>
+      <th>Size</th>
+    </tr>
+    <tr>
+      <td>{{this.name}}</td>
+      <td>{{this.size}}</td>
+    </tr>
+  {{/each}}
+</table>
+
+<br>
+<a href={{@return}}>← Return</a>
+
+<style>
+  table, th, td {
+    border: 1px solid black;
+  }
+
+  td, th {
+    padding: 5px
+  }
+</style>
