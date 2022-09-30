@@ -15,7 +15,7 @@
     "express-formidable-v2": "^2.2.1",
     "express-handlebars": "^6.0.1",
     "formidable": "^2.0.1",
-    "matrix-js-sdk": "^15.1.1"
+    "matrix-js-sdk": "^19.7.0"
   },
   "devDependencies": {
     "dotenv": "^10.0.0"
